@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Red Ghost Security — DeFi Audit & Exploit Research</title>
+    <meta name="description" content="Red Ghost Security provides elite DeFi smart contract auditing, oracle manipulation analysis, and exploit PoC development. Foundry-based fuzz testing since 2026." />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👻</text></svg>" />
+    <style>
+        /* ── Reset & Base ── */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+            background: #0a0a0f;
+            color: #c0c0d0;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        a { color: inherit; text-decoration: none; }
+        ::selection { background: #ff2a4a33; color: #ff2a4a; }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0f; }
+        ::-webkit-scrollbar-thumb { background: #2a2a3f; border-radius: 3px; }
+
+        /* ── Container ── */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+        /* ── Navigation ── */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: #0a0a0fe0; backdrop-filter: blur(12px);
+            border-bottom: 1px solid #1a1a2e;
+        }
+        nav .container {
+            display: flex; align-items: center; justify-content: space-between;
+            height: 64px;
+        }
+        .logo {
+            font-weight: 700; font-size: 1.1rem;
+            color: #ff2a4a; letter-spacing: 2px;
+        }
+        .logo span { color: #e0e0f0; }
+        .nav-links { display: flex; gap: 32px; align-items: center; }
+        .nav-links a {
+            font-size: 0.85rem; color: #808090;
+            transition: color .2s; position: relative;
+        }
+        .nav-links a:hover { color: #ff2a4a; }
+        .nav-links a::after {
+            content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
+            height: 1px; background: #ff2a4a; transform: scaleX(0);
+            transition: transform .2s;
+        }
+        .nav-links a:hover::after { transform: scaleX(1); }
+        .btn-cta {
+            padding: 8px 20px; border: 1px solid #ff2a4a; border-radius: 4px;
+            color: #ff2a4a !important; font-size: 0.8rem;
+            transition: all .2s; letter-spacing: 1px;
+        }
+        .btn-cta:hover { background: #ff2a4a; color: #0a0a0f !important; }
+        .btn-cta::after { display: none !important; }
+
+        /* ── Hero ── */
+        .hero {
+            min-height: 100vh; display: flex; align-items: center;
+            position: relative; overflow: hidden; padding-top: 64px;
+        }
+        .hero::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle at 30% 50%, #ff2a4a08 0%, transparent 50%),
+                        radial-gradient(circle at 70% 30%, #4a4aff08 0%, transparent 50%);
+            animation: bgDrift 20s ease-in-out infinite;
+        }
+        @keyframes bgDrift {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(2%, -2%); }
+        }
+        .hero-content { position: relative; z-index: 1; }
+        .hero-tag {
+            display: inline-block; font-size: 0.75rem; letter-spacing: 3px;
+            color: #ff2a4a; border: 1px solid #ff2a4a33; padding: 4px 12px;
+            border-radius: 2px; margin-bottom: 24px;
+        }
+        .hero h1 {
+            font-size: 3rem; font-weight: 700; line-height: 1.1; max-width: 720px;
+            color: #e0e0f0; margin-bottom: 20px;
+        }
+        .hero h1 .highlight { color: #ff2a4a; }
+        .hero p {
+            font-size: 1.05rem; color: #707080; max-width: 600px; margin-bottom: 40px;
+        }
+        .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+        .btn-primary {
+            padding: 14px 36px; background: #ff2a4a; color: #0a0a0f;
+            border: none; border-radius: 4px; font-family: inherit;
+            font-weight: 600; font-size: 0.9rem; cursor: pointer;
+            transition: all .2s; letter-spacing: 1px;
+        }
+        .btn-primary:hover { background: #ff4060; transform: translateY(-2px); }
+        .btn-secondary {
+            padding: 14px 36px; background: transparent; color: #c0c0d0;
+            border: 1px solid #2a2a3f; border-radius: 4px; font-family: inherit;
+            font-weight: 500; font-size: 0.9rem; cursor: pointer;
+            transition: all .2s;
+        }
+        .btn-secondary:hover { border-color: #ff2a4a; color: #ff2a4a; }
+        .hero-stats {
+            display: flex; gap: 48px; margin-top: 64px; padding-top: 32px;
+            border-top: 1px solid #1a1a2e;
+        }
+        .hero-stats div { }
+        .hero-stats .num { font-size: 1.8rem; font-weight: 700; color: #e0e0f0; }
+        .hero-stats .label { font-size: 0.8rem; color: #606070; margin-top: 4px; }
+
+        /* ── Grid lines decoration ── */
+        .grid-lines {
+            position: absolute; right: 0; top: 0; bottom: 0; width: 40%;
+            background-image:
+                linear-gradient(rgba(255,42,74,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,42,74,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: linear-gradient(to bottom, transparent 10%, black 50%, transparent 90%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 10%, black 50%, transparent 90%);
+            pointer-events: none;
+        }
+
+        /* ── Section Headers ── */
+        section { padding: 100px 0; }
+        .section-label {
+            font-size: 0.75rem; letter-spacing: 3px; color: #ff2a4a;
+            margin-bottom: 12px;
+        }
+        .section-title {
+            font-size: 2rem; font-weight: 700; color: #e0e0f0;
+            margin-bottom: 16px;
+        }
+        .section-sub {
+            color: #606070; font-size: 0.95rem; max-width: 560px;
+            margin-bottom: 48px;
+        }
+
+        /* ── Services ── */
+        .services-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        .service-card {
+            background: #0f0f1a; border: 1px solid #1a1a2e; border-radius: 8px;
+            padding: 32px; transition: all .3s; position: relative;
+            overflow: hidden;
+        }
+        .service-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0;
+            height: 2px; background: linear-gradient(90deg, transparent, #ff2a4a44, transparent);
+            opacity: 0; transition: opacity .3s;
+        }
+        .service-card:hover::before { opacity: 1; }
+        .service-card:hover { border-color: #2a2a4f; transform: translateY(-4px); }
+        .service-card .icon { font-size: 1.5rem; margin-bottom: 16px; }
+        .service-card h3 { font-size: 1.1rem; color: #e0e0f0; margin-bottom: 12px; }
+        .service-card p { font-size: 0.85rem; color: #707080; line-height: 1.6; }
+
+        /* ── Portfolio / Case Study ── */
+        .portfolio-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+        .portfolio-card {
+            background: #0f0f1a; border: 1px solid #1a1a2e; border-radius: 8px;
+            padding: 32px; transition: all .3s; cursor: default;
+        }
+        .portfolio-card:hover { border-color: #2a2a4f; }
+        .portfolio-card .severity {
+            display: inline-block; font-size: 0.7rem; letter-spacing: 1px;
+            padding: 3px 10px; border-radius: 2px; margin-bottom: 16px;
+        }
+        .severity-high { background: #ff2a4a22; color: #ff2a4a; border: 1px solid #ff2a4a44; }
+        .severity-critical { background: #ff004022; color: #ff0040; border: 1px solid #ff004044; }
+        .portfolio-card h3 { font-size: 1rem; color: #e0e0f0; margin-bottom: 8px; }
+        .portfolio-card .meta {
+            font-size: 0.78rem; color: #505060; margin-bottom: 16px;
+        }
+        .portfolio-card p { font-size: 0.82rem; color: #707080; line-height: 1.6; }
+        .portfolio-card .finding {
+            margin-top: 16px; padding: 12px; background: #0a0a0f;
+            border-radius: 4px; font-size: 0.78rem; color: #808090;
+            border-left: 2px solid #ff2a4a;
+        }
+
+        /* ── How It Works ── */
+        .process-timeline {
+            position: relative; padding-left: 40px;
+        }
+        .process-timeline::before {
+            content: ''; position: absolute; left: 15px; top: 0; bottom: 0;
+            width: 1px; background: #1a1a2e;
+        }
+        .process-step {
+            position: relative; margin-bottom: 48px; padding-left: 32px;
+        }
+        .process-step:last-child { margin-bottom: 0; }
+        .process-step .dot {
+            position: absolute; left: -40px; top: 4px;
+            width: 12px; height: 12px; border-radius: 50%;
+            background: #ff2a4a; border: 2px solid #0a0a0f;
+        }
+        .process-step .step-num {
+            font-size: 0.7rem; color: #ff2a4a; letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        .process-step h3 { font-size: 1rem; color: #e0e0f0; margin-bottom: 8px; }
+        .process-step p { font-size: 0.85rem; color: #707080; max-width: 500px; }
+
+        /* ── Contact ── */
+        .contact-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 48px;
+        }
+        .contact-left h3 { font-size: 1.2rem; color: #e0e0f0; margin-bottom: 16px; }
+        .contact-left p { font-size: 0.88rem; color: #707080; margin-bottom: 32px; }
+        .contact-methods { display: flex; flex-direction: column; gap: 16px; }
+        .contact-method {
+            display: flex; align-items: center; gap: 12px;
+            font-size: 0.85rem; color: #808090;
+            padding: 12px 16px; background: #0f0f1a; border-radius: 4px;
+            border: 1px solid #1a1a2e; transition: all .2s;
+        }
+        .contact-method:hover { border-color: #ff2a4a44; color: #c0c0d0; }
+        .contact-method .tag {
+            font-size: 0.65rem; letter-spacing: 1px; color: #ff2a4a;
+            margin-left: auto;
+        }
+        .contact-right {
+            background: #0f0f1a; border: 1px solid #1a1a2e; border-radius: 8px;
+            padding: 32px;
+        }
+        .contact-right h3 {
+            font-size: 1rem; color: #e0e0f0; margin-bottom: 24px;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block; font-size: 0.75rem; color: #606070;
+            letter-spacing: 1px; margin-bottom: 8px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 12px 16px; background: #0a0a0f;
+            border: 1px solid #1a1a2e; border-radius: 4px;
+            color: #c0c0d0; font-family: inherit; font-size: 0.85rem;
+            transition: border-color .2s; outline: none;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: #ff2a4a;
+        }
+        .form-group textarea { resize: vertical; min-height: 100px; }
+
+        /* ── Footer ── */
+        footer {
+            border-top: 1px solid #1a1a2e; padding: 32px 0;
+            text-align: center; font-size: 0.75rem; color: #404050;
+        }
+        footer .ghost { color: #ff2a4a; }
+
+        /* ── Mobile ── */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2rem; }
+            .hero-stats { gap: 24px; flex-wrap: wrap; }
+            .hero-stats .num { font-size: 1.3rem; }
+            .contact-grid { grid-template-columns: 1fr; }
+            .nav-links a:not(.btn-cta) { display: none; }
+            section { padding: 60px 0; }
+            .grid-lines { width: 100%; opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ─── Navigation ─── -->
+    <nav>
+        <div class="container">
+            <a href="#" class="logo">RED<span>GHOST</span></a>
+            <div class="nav-links">
+                <a href="#services">Services</a>
+                <a href="#work">Work</a>
+                <a href="#process">Process</a>
+                <a href="#contact" class="btn-cta">ENGAGE</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ─── Hero ─── -->
+    <section class="hero" id="home">
+        <div class="grid-lines"></div>
+        <div class="container hero-content">
+            <div class="hero-tag">EST. 2026 · DEFI SECURITY</div>
+            <h1>Find the vuln<br/>before the <span class="highlight">blackhat</span> does.</h1>
+            <p>
+                Red Ghost Security is an elite DeFi smart contract audit firm.
+                We specialize in oracle manipulation, flash loan attacks, and
+                zero-day vulnerability discovery. Foundry-native. Results-driven.
+            </p>
+            <div class="hero-actions">
+                <a href="#contact" class="btn-primary">REQUEST AN AUDIT</a>
+                <a href="#work" class="btn-secondary">VIEW OUR WORK</a>
+            </div>
+            <div class="hero-stats">
+                <div><div class="num">10%+</div><div class="label">Max Oracle Shift (PoC)</div></div>
+                <div><div class="num">4</div><div class="label">Protocol Audits</div></div>
+                <div><div class="num">3</div><div class="label">Chains Covered</div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── Services ─── -->
+    <section id="services">
+        <div class="container">
+            <div class="section-label">SERVICES</div>
+            <h2 class="section-title">What we deliver</h2>
+            <p class="section-sub">
+                Comprehensive security assessments built on Foundry-based fuzz testing,
+                manual code review, and real-world exploit simulation.
+            </p>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="icon">🔍</div>
+                    <h3>Smart Contract Audit</h3>
+                    <p>Deep-dive code review combining static analysis, fuzz testing with Foundry, and manual logic inspection. We find what automated tools miss.</p>
+                </div>
+                <div class="service-card">
+                    <div class="icon">💰</div>
+                    <h3>Exploit PoC Development</h3>
+                    <p>Verified proof-of-concept exploits demonstrating real economic impact. Not hypothetical — we simulate the attack and measure the damage.</p>
+                </div>
+                <div class="service-card">
+                    <div class="icon">📡</div>
+                    <h3>Oracle Security Review</h3>
+                    <p>Specialized assessment of price feed integrity. Spot price vs TWAP, flash loan manipulation resistance, and multi-source validation.</p>
+                </div>
+                <div class="service-card">
+                    <div class="icon">⚙️</div>
+                    <h3>MEV & Liquidation Analysis</h3>
+                    <p>Evaluate protocol resilience against MEV extraction, sandwich attacks, and liquidation engine manipulation in live market conditions.</p>
+                </div>
+                <div class="service-card">
+                    <div class="icon">🛡️</div>
+                    <h3>Competitive Intelligence</h3>
+                    <p>Reverse-engineer competitor protocols, identify attack surfaces, and benchmark your security posture against market leaders.</p>
+                </div>
+                <div class="service-card">
+                    <div class="icon">📋</div>
+                    <h3>Remediation Support</h3>
+                    <p>We don't just find bugs — we help you fix them. Detailed fix recommendations, code reviews of patches, and re-validation after deployment.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── Portfolio / Work ─── -->
+    <section id="work">
+        <div class="container">
+            <div class="section-label">CASE STUDIES</div>
+            <h2 class="section-title">Recent findings</h2>
+            <p class="section-sub">
+                Each engagement produces actionable findings. Here are selected
+                vulnerabilities identified across recent protocol audits.
+            </p>
+            <div class="portfolio-grid">
+
+                <div class="portfolio-card">
+                    <div class="severity severity-critical">🔴 CRITICAL</div>
+                    <h3>Uniswap V2 Spot Price Oracle</h3>
+                    <div class="meta">Generalized · All EVM Chains</div>
+                    <p>Direct use of <code>getReserves()</code> without TWAP protection allows single-block flash loan price manipulation.</p>
+                    <div class="finding">
+                        <strong>Result:</strong> 10.57% price shift using 500k USDC flash loan on Ethereum mainnet.
+                    </div>
+                </div>
+
+                <div class="portfolio-card">
+                    <div class="severity severity-high">🟠 HIGH</div>
+                    <h3>AladdinDAO / CLever</h3>
+                    <div class="meta">Yield/Vault · Non-Ethereum EVM</div>
+                    <p>Manual price feed without oracle validation. Attacker can manipulate quote asset to drain vault reserves.</p>
+                    <div class="finding">
+                        <strong>Vector:</strong> Uniswap V2 spot price — no TWAP accumulator implemented.
+                    </div>
+                </div>
+
+                <div class="portfolio-card">
+                    <div class="severity severity-high">🟠 HIGH</div>
+                    <h3>Exactly Protocol</h3>
+                    <div class="meta">Lending · Optimism</div>
+                    <p>Oracle staleness vulnerability — <code>latestAnswer()</code> used without freshness checks. Stale price can persist for hours.</p>
+                    <div class="finding">
+                        <strong>Impact:</strong> Incorrect liquidations, undercollateralized borrowing.
+                    </div>
+                </div>
+
+                <div class="portfolio-card">
+                    <div class="severity severity-high">🟠 HIGH</div>
+                    <h3>BiFi Protocol</h3>
+                    <div class="meta">Lending · Multi-Chain</div>
+                    <p>Cross-chain oracle bridge vulnerability — inconsistent pricing between source and destination chains.</p>
+                    <div class="finding">
+                        <strong>Attack:</strong> Flash loan on one chain → exploit stale price on another.
+                    </div>
+                </div>
+
+                <div class="portfolio-card">
+                    <div class="severity severity-high">🟠 HIGH</div>
+                    <h3>Wildcat Protocol</h3>
+                    <div class="meta">Lending · Ethereum</div>
+                    <p>Permissionless market creation lacks rate validation — can be used to deploy predatory lending terms.</p>
+                    <div class="finding">
+                        <strong>Risk:</strong> Unchecked configuration parameters in market factory.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── Process ─── -->
+    <section id="process">
+        <div class="container">
+            <div class="section-label">PROCESS</div>
+            <h2 class="section-title">How we work</h2>
+            <p class="section-sub">
+                From code drop to signed report — our engagement lifecycle is
+                transparent, efficient, and designed for maximum coverage.
+            </p>
+            <div class="process-timeline">
+                <div class="process-step">
+                    <div class="dot"></div>
+                    <div class="step-num">STEP 01</div>
+                    <h3>Scoping & Intelligence</h3>
+                    <p>We review your protocol architecture, identify critical paths, and define the audit scope. Target surface areas mapped before a single line of code is read.</p>
+                </div>
+                <div class="process-step">
+                    <div class="dot"></div>
+                    <div class="step-num">STEP 02</div>
+                    <h3>Automated & Manual Analysis</h3>
+                    <p>Foundry-based fuzz testing runs alongside manual code review. Every state-transition function is stress-tested with adversarial inputs.</p>
+                </div>
+                <div class="process-step">
+                    <div class="dot"></div>
+                    <div class="step-num">STEP 03</div>
+                    <h3>Exploit Validation</h3>
+                    <p>Every theoretical vulnerability is converted into a working PoC on a mainnet fork. We measure exact economic impact — no hypotheticals.</p>
+                </div>
+                <div class="process-step">
+                    <div class="dot"></div>
+                    <div class="step-num">STEP 04</div>
+                    <h3>Report & Remediation</h3>
+                    <p>Detailed report with severity ratings, exploit code, and fix recommendations. We support your team through patch validation and re-audit.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── Contact ─── -->
+    <section id="contact">
+        <div class="container">
+            <div class="section-label">CONTACT</div>
+            <h2 class="section-title">Let's talk</h2>
+            <p class="section-sub">
+                We're available for direct engagement through Telegram, email, or
+                this form. Initial consultations are complimentary.
+            </p>
+            <div class="contact-grid">
+                <div class="contact-left">
+                    <h3>Reach us directly</h3>
+                    <p>Quickest response is via Telegram. Email for formal engagement requests.</p>
+                    <div class="contact-methods">
+                        <a href="https://t.me/RedNetAuBot" target="_blank" class="contact-method">
+                            <span>📱</span> Telegram: @RedNetAuBot
+                            <span class="tag">QUICKEST</span>
+                        </a>
+                        <a href="mailto:queenbvibes17@gmail.com" class="contact-method">
+                            <span>📧</span> queenbvibes17@gmail.com
+                            <span class="tag">FORMAL</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="contact-right">
+                    <h3>Request an engagement</h3>
+                    <form action="mailto:queenbvibes17@gmail.com" method="post" enctype="text/plain">
+                        <div class="form-group">
+                            <label>PROJECT / PROTOCOL</label>
+                            <input type="text" name="project" placeholder="e.g. MyProtocol" required />
+                        </div>
+                        <div class="form-group">
+                            <label>CHAIN</label>
+                            <select name="chain">
+                                <option value="">— Select —</option>
+                                <option>Ethereum</option>
+                                <option>Arbitrum</option>
+                                <option>Optimism</option>
+                                <option>Base</option>
+                                <option>BNB Chain</option>
+                                <option>Polygon</option>
+                                <option>Solana</option>
+                                <option>Sui</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>SCOPE</label>
+                            <select name="service">
+                                <option value="">— Select —</option>
+                                <option>Full Smart Contract Audit</option>
+                                <option>Oracle Security Review</option>
+                                <option>Exploit PoC Development</option>
+                                <option>MEV / Liquidation Analysis</option>
+                                <option>Competitive Intelligence</option>
+                                <option>Not sure — discuss</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>CONTACT (TELEGRAM OR EMAIL)</label>
+                            <input type="text" name="contact" placeholder="@yourTelegram or email" required />
+                        </div>
+                        <div class="form-group">
+                            <label>NOTES</label>
+                            <textarea name="notes" placeholder="TVL, contract links, timeline, anything relevant…"></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary" style="width:100%">SEND INQUIRY</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── Footer ─── -->
+    <footer>
+        <div class="container">
+            <span class="ghost">👻</span> Red Ghost Security — DeFi Audit &amp; Exploit Research — 2026
+        </div>
+    </footer>
+
+</body>
+</html>
