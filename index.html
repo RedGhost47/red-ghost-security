@@ -4,14 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Red Ghost Security — DeFi Audit & Exploit Research</title>
-    <meta name="description" content="Red Ghost Security provides elite DeFi smart contract auditing, oracle manipulation analysis, and exploit PoC development. Foundry-based fuzz testing since 2026." />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👻</text></svg>" />
+    <meta name="description" content="Elite DeFi smart contract auditing, oracle manipulation analysis, and exploit PoC development. Foundry-native fuzz testing. We find what others miss." />
+    <meta name="keywords" content="defi audit, smart contract security, oracle manipulation, flash loan, foundry, blockchain security" />
+    <meta property="og:title" content="Red Ghost Security — DeFi Audit & Exploit Research" />
+    <meta property="og:description" content="Find the vuln before the blackhat does." />
+    <meta property="og:image" content="https://redghost47.github.io/red-ghost-security/avatar.svg" />
+    <meta name="theme-color" content="#0a0a0f" />
+    <link rel="icon" type="image/svg+xml" href="https://redghost47.github.io/red-ghost-security/avatar.svg" />
     <style>
         /* ── Reset & Base ── */
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
         body {
-            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', 'Menlo', monospace;
             background: #0a0a0f;
             color: #c0c0d0;
             line-height: 1.6;
@@ -19,11 +24,13 @@
         }
         a { color: inherit; text-decoration: none; }
         ::selection { background: #ff2a4a33; color: #ff2a4a; }
+        code { font-family: inherit; color: #ff2a4a; background: #ff2a4a0a; padding: 1px 4px; border-radius: 2px; }
 
         /* ── Scrollbar ── */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0a0a0f; }
         ::-webkit-scrollbar-thumb { background: #2a2a3f; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3a3a5f; }
 
         /* ── Container ── */
         .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
@@ -33,20 +40,24 @@
             position: fixed; top: 0; left: 0; right: 0; z-index: 100;
             background: #0a0a0fe0; backdrop-filter: blur(12px);
             border-bottom: 1px solid #1a1a2e;
+            transition: border-color .3s;
         }
+        nav.scrolled { border-color: #ff2a4a22; }
         nav .container {
             display: flex; align-items: center; justify-content: space-between;
             height: 64px;
         }
         .logo {
-            font-weight: 700; font-size: 1.1rem;
-            color: #ff2a4a; letter-spacing: 2px;
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 700; font-size: 1.1rem; letter-spacing: 2px;
         }
-        .logo span { color: #e0e0f0; }
-        .nav-links { display: flex; gap: 32px; align-items: center; }
+        .logo img { width: 28px; height: 28px; border-radius: 50%; }
+        .logo .red { color: #ff2a4a; }
+        .logo .ghost { color: #e0e0f0; }
+        .nav-links { display: flex; gap: 28px; align-items: center; }
         .nav-links a {
-            font-size: 0.85rem; color: #808090;
-            transition: color .2s; position: relative;
+            font-size: 0.8rem; color: #808090; position: relative;
+            transition: color .2s; letter-spacing: 0.5px;
         }
         .nav-links a:hover { color: #ff2a4a; }
         .nav-links a::after {
@@ -55,13 +66,13 @@
             transition: transform .2s;
         }
         .nav-links a:hover::after { transform: scaleX(1); }
-        .btn-cta {
-            padding: 8px 20px; border: 1px solid #ff2a4a; border-radius: 4px;
-            color: #ff2a4a !important; font-size: 0.8rem;
-            transition: all .2s; letter-spacing: 1px;
+        .btn-nav {
+            padding: 7px 18px; border: 1px solid #ff2a4a; border-radius: 4px;
+            color: #ff2a4a !important; font-size: 0.75rem; letter-spacing: 1px;
+            transition: all .2s;
         }
-        .btn-cta:hover { background: #ff2a4a; color: #0a0a0f !important; }
-        .btn-cta::after { display: none !important; }
+        .btn-nav:hover { background: #ff2a4a; color: #0a0a0f !important; }
+        .btn-nav::after { display: none !important; }
 
         /* ── Hero ── */
         .hero {
@@ -69,88 +80,137 @@
             position: relative; overflow: hidden; padding-top: 64px;
         }
         .hero::before {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle at 30% 50%, #ff2a4a08 0%, transparent 50%),
-                        radial-gradient(circle at 70% 30%, #4a4aff08 0%, transparent 50%);
-            animation: bgDrift 20s ease-in-out infinite;
+            content: ''; position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse at 25% 50%, #ff2a4a06 0%, transparent 60%),
+                radial-gradient(ellipse at 75% 30%, #4a4aff06 0%, transparent 60%);
+            animation: bgBreath 8s ease-in-out infinite;
         }
-        @keyframes bgDrift {
-            0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(2%, -2%); }
+        @keyframes bgBreath {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        .hero-grid {
+            position: absolute; right: 0; top: 0; bottom: 0; width: 45%;
+            background-image:
+                linear-gradient(rgba(255,42,74,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,42,74,0.04) 1px, transparent 1px);
+            background-size: 50px 50px;
+            mask-image: linear-gradient(to bottom, transparent 5%, black 40%, transparent 85%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 5%, black 40%, transparent 85%);
+            pointer-events: none;
         }
         .hero-content { position: relative; z-index: 1; }
         .hero-tag {
-            display: inline-block; font-size: 0.75rem; letter-spacing: 3px;
-            color: #ff2a4a; border: 1px solid #ff2a4a33; padding: 4px 12px;
-            border-radius: 2px; margin-bottom: 24px;
+            display: inline-block; font-size: 0.7rem; letter-spacing: 3px;
+            color: #ff2a4a; border: 1px solid #ff2a4a33;
+            padding: 4px 12px; border-radius: 2px; margin-bottom: 28px;
+            animation: fadeIn .8s ease;
         }
         .hero h1 {
-            font-size: 3rem; font-weight: 700; line-height: 1.1; max-width: 720px;
-            color: #e0e0f0; margin-bottom: 20px;
+            font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700;
+            line-height: 1.05; max-width: 780px;
+            color: #e0e0f0; margin-bottom: 24px;
+            animation: fadeIn .8s ease .1s both;
         }
-        .hero h1 .highlight { color: #ff2a4a; }
+        .hero h1 .red { color: #ff2a4a; }
+        .hero h1 .glitch {
+            position: relative; display: inline-block;
+        }
+        .hero h1 .glitch::before,
+        .hero h1 .glitch::after {
+            content: attr(data-text); position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; opacity: 0.7;
+        }
+        .hero h1 .glitch::before {
+            color: #00f; clip-path: inset(20% 0 60% 0);
+            animation: glitch1 3s infinite;
+        }
+        .hero h1 .glitch::after {
+            color: #f0f; clip-path: inset(60% 0 10% 0);
+            animation: glitch2 3s infinite;
+        }
+        @keyframes glitch1 {
+            0%, 90%, 100% { transform: translate(0); }
+            92% { transform: translate(-3px, 1px); }
+            94% { transform: translate(2px, -1px); }
+            96% { transform: translate(-1px, 2px); }
+        }
+        @keyframes glitch2 {
+            0%, 90%, 100% { transform: translate(0); }
+            92% { transform: translate(2px, -1px); }
+            94% { transform: translate(-3px, 1px); }
+            96% { transform: translate(1px, -2px); }
+        }
         .hero p {
-            font-size: 1.05rem; color: #707080; max-width: 600px; margin-bottom: 40px;
+            font-size: 1.05rem; color: #707080; max-width: 580px;
+            margin-bottom: 40px; animation: fadeIn .8s ease .2s both;
         }
-        .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+        .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; animation: fadeIn .8s ease .3s both; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         .btn-primary {
             padding: 14px 36px; background: #ff2a4a; color: #0a0a0f;
             border: none; border-radius: 4px; font-family: inherit;
-            font-weight: 600; font-size: 0.9rem; cursor: pointer;
-            transition: all .2s; letter-spacing: 1px;
+            font-weight: 600; font-size: 0.85rem; cursor: pointer;
+            transition: all .2s; letter-spacing: 1px; position: relative;
+            overflow: hidden;
         }
-        .btn-primary:hover { background: #ff4060; transform: translateY(-2px); }
+        .btn-primary:hover { background: #ff4060; transform: translateY(-2px); box-shadow: 0 8px 32px #ff2a4a22; }
         .btn-secondary {
             padding: 14px 36px; background: transparent; color: #c0c0d0;
             border: 1px solid #2a2a3f; border-radius: 4px; font-family: inherit;
-            font-weight: 500; font-size: 0.9rem; cursor: pointer;
+            font-weight: 500; font-size: 0.85rem; cursor: pointer;
             transition: all .2s;
         }
         .btn-secondary:hover { border-color: #ff2a4a; color: #ff2a4a; }
         .hero-stats {
-            display: flex; gap: 48px; margin-top: 64px; padding-top: 32px;
-            border-top: 1px solid #1a1a2e;
+            display: flex; gap: 48px; margin-top: 56px; padding-top: 28px;
+            border-top: 1px solid #1a1a2e; animation: fadeIn .8s ease .4s both;
         }
-        .hero-stats div { }
         .hero-stats .num { font-size: 1.8rem; font-weight: 700; color: #e0e0f0; }
-        .hero-stats .label { font-size: 0.8rem; color: #606070; margin-top: 4px; }
+        .hero-stats .label { font-size: 0.78rem; color: #606070; margin-top: 4px; }
 
-        /* ── Grid lines decoration ── */
-        .grid-lines {
-            position: absolute; right: 0; top: 0; bottom: 0; width: 40%;
-            background-image:
-                linear-gradient(rgba(255,42,74,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,42,74,0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
-            mask-image: linear-gradient(to bottom, transparent 10%, black 50%, transparent 90%);
-            -webkit-mask-image: linear-gradient(to bottom, transparent 10%, black 50%, transparent 90%);
-            pointer-events: none;
+        /* ── Terminal ticker ── */
+        .ticker {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 12px 0; border-top: 1px solid #1a1a2e;
+            overflow: hidden; background: #0a0a0f;
+        }
+        .ticker-track {
+            display: flex; gap: 48px; white-space: nowrap;
+            animation: tickerScroll 60s linear infinite;
+            font-size: 0.78rem; color: #404050;
+        }
+        .ticker-track span { opacity: 0.6; }
+        .ticker-track .hl { color: #ff2a4a; opacity: 1; }
+        @keyframes tickerScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
         }
 
-        /* ── Section Headers ── */
-        section { padding: 100px 0; }
+        /* ── Common Sections ── */
+        section { padding: 100px 0; position: relative; }
         .section-label {
-            font-size: 0.75rem; letter-spacing: 3px; color: #ff2a4a;
+            font-size: 0.7rem; letter-spacing: 3px; color: #ff2a4a;
             margin-bottom: 12px;
         }
         .section-title {
-            font-size: 2rem; font-weight: 700; color: #e0e0f0;
+            font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 700; color: #e0e0f0;
             margin-bottom: 16px;
         }
         .section-sub {
-            color: #606070; font-size: 0.95rem; max-width: 560px;
-            margin-bottom: 48px;
+            color: #606070; font-size: 0.92rem; max-width: 560px; margin-bottom: 48px;
         }
 
         /* ── Services ── */
+        #services { background: linear-gradient(180deg, #0a0a0f 0%, #0c0c18 100%); }
         .services-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
+            gap: 20px;
         }
         .service-card {
             background: #0f0f1a; border: 1px solid #1a1a2e; border-radius: 8px;
-            padding: 32px; transition: all .3s; position: relative;
-            overflow: hidden;
+            padding: 28px; transition: all .3s; position: relative; overflow: hidden;
         }
         .service-card::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0;
@@ -158,156 +218,179 @@
             opacity: 0; transition: opacity .3s;
         }
         .service-card:hover::before { opacity: 1; }
-        .service-card:hover { border-color: #2a2a4f; transform: translateY(-4px); }
-        .service-card .icon { font-size: 1.5rem; margin-bottom: 16px; }
-        .service-card h3 { font-size: 1.1rem; color: #e0e0f0; margin-bottom: 12px; }
-        .service-card p { font-size: 0.85rem; color: #707080; line-height: 1.6; }
+        .service-card:hover { border-color: #2a2a4f; transform: translateY(-3px); }
+        .service-card .icon { font-size: 1.4rem; margin-bottom: 14px; }
+        .service-card h3 { font-size: 1rem; color: #e0e0f0; margin-bottom: 10px; }
+        .service-card p { font-size: 0.82rem; color: #707080; line-height: 1.7; }
 
-        /* ── Portfolio / Case Study ── */
+        /* ── Portfolio ── */
         .portfolio-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 24px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
         }
         .portfolio-card {
             background: #0f0f1a; border: 1px solid #1a1a2e; border-radius: 8px;
-            padding: 32px; transition: all .3s; cursor: default;
+            padding: 28px; transition: all .3s; cursor: default;
         }
         .portfolio-card:hover { border-color: #2a2a4f; }
-        .portfolio-card .severity {
-            display: inline-block; font-size: 0.7rem; letter-spacing: 1px;
-            padding: 3px 10px; border-radius: 2px; margin-bottom: 16px;
+        .portfolio-card .badge {
+            display: inline-block; font-size: 0.65rem; letter-spacing: 1px;
+            padding: 3px 10px; border-radius: 2px; margin-bottom: 14px;
         }
-        .severity-high { background: #ff2a4a22; color: #ff2a4a; border: 1px solid #ff2a4a44; }
-        .severity-critical { background: #ff004022; color: #ff0040; border: 1px solid #ff004044; }
-        .portfolio-card h3 { font-size: 1rem; color: #e0e0f0; margin-bottom: 8px; }
-        .portfolio-card .meta {
-            font-size: 0.78rem; color: #505060; margin-bottom: 16px;
-        }
-        .portfolio-card p { font-size: 0.82rem; color: #707080; line-height: 1.6; }
-        .portfolio-card .finding {
-            margin-top: 16px; padding: 12px; background: #0a0a0f;
-            border-radius: 4px; font-size: 0.78rem; color: #808090;
+        .badge-critical { background: #ff004022; color: #ff0040; border: 1px solid #ff004044; }
+        .badge-high { background: #ff2a4a22; color: #ff2a4a; border: 1px solid #ff2a4a44; }
+        .badge-medium { background: #ff880022; color: #ff8800; border: 1px solid #ff880044; }
+        .portfolio-card h3 { font-size: 0.95rem; color: #e0e0f0; margin-bottom: 6px; }
+        .portfolio-card .meta { font-size: 0.75rem; color: #505060; margin-bottom: 14px; }
+        .portfolio-card p { font-size: 0.8rem; color: #707080; line-height: 1.7; }
+        .portfolio-card .detail {
+            margin-top: 14px; padding: 10px 14px; background: #0a0a0f;
+            border-radius: 4px; font-size: 0.76rem; color: #808090;
             border-left: 2px solid #ff2a4a;
         }
 
-        /* ── How It Works ── */
-        .process-timeline {
-            position: relative; padding-left: 40px;
+        /* ── Process ── */
+        #process { background: linear-gradient(0deg, #0a0a0f 0%, #0c0c18 100%); }
+        .process-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
         }
-        .process-timeline::before {
-            content: ''; position: absolute; left: 15px; top: 0; bottom: 0;
-            width: 1px; background: #1a1a2e;
+        .process-card {
+            background: #0f0f1a; border: 1px solid #1a1a2e; border-radius: 8px;
+            padding: 28px; position: relative; counter-increment: step;
         }
-        .process-step {
-            position: relative; margin-bottom: 48px; padding-left: 32px;
+        .process-card .step {
+            position: absolute; top: -12px; left: 20px;
+            background: #ff2a4a; color: #0a0a0f;
+            font-size: 0.65rem; font-weight: 700; letter-spacing: 1px;
+            padding: 2px 10px; border-radius: 2px;
         }
-        .process-step:last-child { margin-bottom: 0; }
-        .process-step .dot {
-            position: absolute; left: -40px; top: 4px;
-            width: 12px; height: 12px; border-radius: 50%;
-            background: #ff2a4a; border: 2px solid #0a0a0f;
+        .process-card h3 { font-size: 0.95rem; color: #e0e0f0; margin-top: 8px; margin-bottom: 10px; }
+        .process-card p { font-size: 0.8rem; color: #707080; line-height: 1.7; }
+
+        /* ── Trust Bar ── */
+        .trust-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 32px; flex-wrap: wrap; padding: 24px 0;
+            border-top: 1px solid #1a1a2e; margin-top: 60px;
         }
-        .process-step .step-num {
-            font-size: 0.7rem; color: #ff2a4a; letter-spacing: 2px;
-            margin-bottom: 8px;
+        .trust-bar .item {
+            font-size: 0.85rem; color: #404050;
+            display: flex; align-items: center; gap: 8px;
         }
-        .process-step h3 { font-size: 1rem; color: #e0e0f0; margin-bottom: 8px; }
-        .process-step p { font-size: 0.85rem; color: #707080; max-width: 500px; }
+        .trust-bar .item .num { color: #ff2a4a; font-weight: 700; }
 
         /* ── Contact ── */
         .contact-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 48px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
         }
-        .contact-left h3 { font-size: 1.2rem; color: #e0e0f0; margin-bottom: 16px; }
-        .contact-left p { font-size: 0.88rem; color: #707080; margin-bottom: 32px; }
-        .contact-methods { display: flex; flex-direction: column; gap: 16px; }
-        .contact-method {
+        .contact-left h3 { font-size: 1.1rem; color: #e0e0f0; margin-bottom: 14px; }
+        .contact-left p { font-size: 0.85rem; color: #707080; margin-bottom: 28px; }
+        .contact-list { display: flex; flex-direction: column; gap: 12px; }
+        .contact-item {
             display: flex; align-items: center; gap: 12px;
-            font-size: 0.85rem; color: #808090;
+            font-size: 0.82rem; color: #808090;
             padding: 12px 16px; background: #0f0f1a; border-radius: 4px;
             border: 1px solid #1a1a2e; transition: all .2s;
         }
-        .contact-method:hover { border-color: #ff2a4a44; color: #c0c0d0; }
-        .contact-method .tag {
-            font-size: 0.65rem; letter-spacing: 1px; color: #ff2a4a;
-            margin-left: auto;
+        .contact-item:hover { border-color: #ff2a4a44; color: #c0c0d0; }
+        .contact-item .tag {
+            font-size: 0.6rem; letter-spacing: 1px; color: #ff2a4a;
+            margin-left: auto; white-space: nowrap;
         }
-        .contact-right {
+        .contact-form {
             background: #0f0f1a; border: 1px solid #1a1a2e; border-radius: 8px;
-            padding: 32px;
+            padding: 28px;
         }
-        .contact-right h3 {
-            font-size: 1rem; color: #e0e0f0; margin-bottom: 24px;
+        .contact-form h3 {
+            font-size: 0.95rem; color: #e0e0f0; margin-bottom: 20px;
         }
-        .form-group { margin-bottom: 20px; }
-        .form-group label {
-            display: block; font-size: 0.75rem; color: #606070;
-            letter-spacing: 1px; margin-bottom: 8px;
+        .fg { margin-bottom: 16px; }
+        .fg label {
+            display: block; font-size: 0.7rem; color: #606070;
+            letter-spacing: 1px; margin-bottom: 6px;
         }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%; padding: 12px 16px; background: #0a0a0f;
+        .fg input, .fg select, .fg textarea {
+            width: 100%; padding: 10px 14px; background: #0a0a0f;
             border: 1px solid #1a1a2e; border-radius: 4px;
-            color: #c0c0d0; font-family: inherit; font-size: 0.85rem;
+            color: #c0c0d0; font-family: inherit; font-size: 0.82rem;
             transition: border-color .2s; outline: none;
         }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            border-color: #ff2a4a;
-        }
-        .form-group textarea { resize: vertical; min-height: 100px; }
+        .fg input:focus, .fg select:focus, .fg textarea:focus { border-color: #ff2a4a; }
+        .fg textarea { resize: vertical; min-height: 90px; }
 
         /* ── Footer ── */
         footer {
             border-top: 1px solid #1a1a2e; padding: 32px 0;
-            text-align: center; font-size: 0.75rem; color: #404050;
+            text-align: center; font-size: 0.72rem; color: #404050;
         }
-        footer .ghost { color: #ff2a4a; }
+        footer .ghost-icon { color: #ff2a4a; }
 
         /* ── Mobile ── */
         @media (max-width: 768px) {
-            .hero h1 { font-size: 2rem; }
-            .hero-stats { gap: 24px; flex-wrap: wrap; }
+            .hero-stats { gap: 20px; flex-wrap: wrap; }
             .hero-stats .num { font-size: 1.3rem; }
+            .hero-grid { width: 100%; opacity: 0.2; }
             .contact-grid { grid-template-columns: 1fr; }
-            .nav-links a:not(.btn-cta) { display: none; }
+            .nav-links a:not(.btn-nav):not(.logo-link) { display: none; }
             section { padding: 60px 0; }
-            .grid-lines { width: 100%; opacity: 0.3; }
         }
     </style>
 </head>
 <body>
 
     <!-- ─── Navigation ─── -->
-    <nav>
+    <nav id="navbar">
         <div class="container">
-            <a href="#" class="logo">RED<span>GHOST</span></a>
+            <a href="#" class="logo">
+                <img src="avatar.svg" alt="👻" />
+                <span class="red">RED</span><span class="ghost">GHOST</span>
+            </a>
             <div class="nav-links">
                 <a href="#services">Services</a>
                 <a href="#work">Work</a>
                 <a href="#process">Process</a>
-                <a href="#contact" class="btn-cta">ENGAGE</a>
+                <a href="#contact" class="btn-nav">ENGAGE</a>
             </div>
         </div>
     </nav>
 
     <!-- ─── Hero ─── -->
-    <section class="hero" id="home">
-        <div class="grid-lines"></div>
+    <section class="hero">
+        <div class="hero-grid"></div>
         <div class="container hero-content">
-            <div class="hero-tag">EST. 2026 · DEFI SECURITY</div>
-            <h1>Find the vuln<br/>before the <span class="highlight">blackhat</span> does.</h1>
+            <div class="hero-tag">✦ EST. 2026 · DEFI SECURITY</div>
+            <h1>
+                Find the vuln<br/>
+                before the <span class="red glitch" data-text="blackhat">blackhat</span> does.
+            </h1>
             <p>
-                Red Ghost Security is an elite DeFi smart contract audit firm.
-                We specialize in oracle manipulation, flash loan attacks, and
-                zero-day vulnerability discovery. Foundry-native. Results-driven.
+                Red Ghost Security is an elite smart contract audit firm specializing in
+                <strong style="color:#c0c0d0;">oracle manipulation</strong>,
+                <strong style="color:#c0c0d0;">flash loan attack surface</strong>, and
+                <strong style="color:#c0c0d0;">zero-day discovery</strong>.
+                Foundry-native. Results-driven. No hypotheticals.
             </p>
             <div class="hero-actions">
-                <a href="#contact" class="btn-primary">REQUEST AN AUDIT</a>
+                <a href="#contact" class="btn-primary">REQUEST AN AUDIT →</a>
                 <a href="#work" class="btn-secondary">VIEW OUR WORK</a>
             </div>
             <div class="hero-stats">
-                <div><div class="num">10%+</div><div class="label">Max Oracle Shift (PoC)</div></div>
-                <div><div class="num">4</div><div class="label">Protocol Audits</div></div>
-                <div><div class="num">3</div><div class="label">Chains Covered</div></div>
+                <div><div class="num" id="stat1">0%+</div><div class="label">Max Oracle Deviation</div></div>
+                <div><div class="num" id="stat2">0</div><div class="label">Protocol Audits</div></div>
+                <div><div class="num" id="stat3">0</div><div class="label">Chains Covered</div></div>
+            </div>
+        </div>
+        <div class="ticker">
+            <div class="ticker-track">
+                <span>◆ 0xDEAD 0xBEEF ◆ 0xCAFE 0xF00D</span>
+                <span class="hl">◆ UNISWAP V2 ORACLE MANIPULATION — 10.57% SHIFT CONFIRMED ◆</span>
+                <span>◆ AUDIT: WILDCAT PROTOCOL ◆ BIFI PROTOCOL ◆ ALADDINDAO ◆ EXACTLY ◆</span>
+                <span>◆ FLASH LOAN · TWAP · CHAINLINK · MEV ◆</span>
+                <span>◆ 0xDEAD 0xBEEF ◆ 0xCAFE 0xF00D</span>
+                <span class="hl">◆ UNISWAP V2 ORACLE MANIPULATION — 10.57% SHIFT CONFIRMED ◆</span>
+                <span>◆ AUDIT: WILDCAT PROTOCOL ◆ BIFI PROTOCOL ◆ ALADDINDAO ◆ EXACTLY ◆</span>
+                <span>◆ FLASH LOAN · TWAP · CHAINLINK · MEV ◆</span>
             </div>
         </div>
     </section>
@@ -315,105 +398,114 @@
     <!-- ─── Services ─── -->
     <section id="services">
         <div class="container">
-            <div class="section-label">SERVICES</div>
+            <div class="section-label">✦ SERVICES</div>
             <h2 class="section-title">What we deliver</h2>
             <p class="section-sub">
-                Comprehensive security assessments built on Foundry-based fuzz testing,
-                manual code review, and real-world exploit simulation.
+                Comprehensive security assessments — Foundry fuzz testing,
+                manual review, and real-world exploit simulation. Every finding
+                is weaponized as a working PoC on a mainnet fork.
             </p>
             <div class="services-grid">
                 <div class="service-card">
                     <div class="icon">🔍</div>
                     <h3>Smart Contract Audit</h3>
-                    <p>Deep-dive code review combining static analysis, fuzz testing with Foundry, and manual logic inspection. We find what automated tools miss.</p>
+                    <p>Deep-dive manual code review + Foundry invariant fuzzing. We trace every state transition with adversarial inputs. Automated tools miss what our eyes catch.</p>
                 </div>
                 <div class="service-card">
                     <div class="icon">💰</div>
                     <h3>Exploit PoC Development</h3>
-                    <p>Verified proof-of-concept exploits demonstrating real economic impact. Not hypothetical — we simulate the attack and measure the damage.</p>
+                    <p>Every vulnerability becomes a working proof-of-concept on a mainnet fork. We measure exact economic impact — not theoretical. Verified block data.</p>
                 </div>
                 <div class="service-card">
                     <div class="icon">📡</div>
                     <h3>Oracle Security Review</h3>
-                    <p>Specialized assessment of price feed integrity. Spot price vs TWAP, flash loan manipulation resistance, and multi-source validation.</p>
+                    <p>Price feed integrity is our specialization. Spot vs TWAP, flash loan manipulation resistance, multi-source validation, staleness checks. Where protocols bleed.</p>
                 </div>
                 <div class="service-card">
                     <div class="icon">⚙️</div>
                     <h3>MEV & Liquidation Analysis</h3>
-                    <p>Evaluate protocol resilience against MEV extraction, sandwich attacks, and liquidation engine manipulation in live market conditions.</p>
+                    <p>Protocol resilience against MEV extraction, sandwich attacks, and liquidation engine manipulation in live market conditions. We simulate the mempool.</p>
                 </div>
                 <div class="service-card">
                     <div class="icon">🛡️</div>
-                    <h3>Competitive Intelligence</h3>
-                    <p>Reverse-engineer competitor protocols, identify attack surfaces, and benchmark your security posture against market leaders.</p>
+                    <h3>Competitive Intel</h3>
+                    <p>Reverse-engineer competitor protocols. Identify undisclosed attack surfaces. Benchmark your security posture against market leaders in your vertical.</p>
                 </div>
                 <div class="service-card">
                     <div class="icon">📋</div>
                     <h3>Remediation Support</h3>
-                    <p>We don't just find bugs — we help you fix them. Detailed fix recommendations, code reviews of patches, and re-validation after deployment.</p>
+                    <p>We don't vanish after the report. Detailed fix recommendations, patch review, re-validation. From finding to fixing — we're in it with you.</p>
                 </div>
+            </div>
+            <div class="trust-bar">
+                <div class="item"><span class="num">10%+</span> Max oracle deviation proven</div>
+                <div class="item"><span class="num">4</span> Protocols audited</div>
+                <div class="item"><span class="num">3</span> EVM chains covered</div>
+                <div class="item"><span class="num">100%</span> PoCs verified on fork</div>
             </div>
         </div>
     </section>
 
-    <!-- ─── Portfolio / Work ─── -->
+    <!-- ─── Portfolio ─── -->
     <section id="work">
         <div class="container">
-            <div class="section-label">CASE STUDIES</div>
-            <h2 class="section-title">Recent findings</h2>
+            <div class="section-label">✦ CASE STUDIES</div>
+            <h2 class="section-title">Selected findings</h2>
             <p class="section-sub">
-                Each engagement produces actionable findings. Here are selected
-                vulnerabilities identified across recent protocol audits.
+                Real vulnerabilities identified across recent engagements.
+                Every finding includes a verified PoC with measured economic impact.
             </p>
             <div class="portfolio-grid">
 
                 <div class="portfolio-card">
-                    <div class="severity severity-critical">🔴 CRITICAL</div>
+                    <div class="badge badge-critical">🔴 CRITICAL</div>
                     <h3>Uniswap V2 Spot Price Oracle</h3>
-                    <div class="meta">Generalized · All EVM Chains</div>
-                    <p>Direct use of <code>getReserves()</code> without TWAP protection allows single-block flash loan price manipulation.</p>
-                    <div class="finding">
-                        <strong>Result:</strong> 10.57% price shift using 500k USDC flash loan on Ethereum mainnet.
+                    <div class="meta">Generalized · All EVM Chains · Public</div>
+                    <p><code>getReserves()</code> used directly without TWAP protection enables single-block flash loan manipulation.</p>
+                    <div class="detail">
+                        <strong>Impact:</strong> 10.57% price deviation with 500k USDC flash loan (Ethereum block 25,051,620).<br/>
+                        <strong>Fix:</strong> TWAP accumulator ≥30min · Chainlink validation · Circuit breakers.
                     </div>
                 </div>
 
                 <div class="portfolio-card">
-                    <div class="severity severity-high">🟠 HIGH</div>
+                    <div class="badge badge-high">🟠 HIGH</div>
                     <h3>AladdinDAO / CLever</h3>
-                    <div class="meta">Yield/Vault · Non-Ethereum EVM</div>
-                    <p>Manual price feed without oracle validation. Attacker can manipulate quote asset to drain vault reserves.</p>
-                    <div class="finding">
-                        <strong>Vector:</strong> Uniswap V2 spot price — no TWAP accumulator implemented.
+                    <div class="meta">Yield/Vault · Non-Ethereum</div>
+                    <p>Manual price feed without oracle validation. Flash loan manipulates quote asset → drain vault.</p>
+                    <div class="detail">
+                        <strong>Vector:</strong> Uniswap V2 spot price as primary oracle. No TWAP implemented despite secure version existing in repo.
                     </div>
                 </div>
 
                 <div class="portfolio-card">
-                    <div class="severity severity-high">🟠 HIGH</div>
+                    <div class="badge badge-high">🟠 HIGH</div>
                     <h3>Exactly Protocol</h3>
                     <div class="meta">Lending · Optimism</div>
-                    <p>Oracle staleness vulnerability — <code>latestAnswer()</code> used without freshness checks. Stale price can persist for hours.</p>
-                    <div class="finding">
-                        <strong>Impact:</strong> Incorrect liquidations, undercollateralized borrowing.
+                    <p><code>latestAnswer()</code> returns stale prices. No staleness threshold — outdated price can persist for hours.</p>
+                    <div class="detail">
+                        <strong>Impact:</strong> Incorrect liquidations, undercollateralized borrowing.<br/>
+                        <strong>Fix:</strong> Add <code>updatedAt</code> validation with max staleness tolerance.
                     </div>
                 </div>
 
                 <div class="portfolio-card">
-                    <div class="severity severity-high">🟠 HIGH</div>
+                    <div class="badge badge-high">🟠 HIGH</div>
                     <h3>BiFi Protocol</h3>
                     <div class="meta">Lending · Multi-Chain</div>
-                    <p>Cross-chain oracle bridge vulnerability — inconsistent pricing between source and destination chains.</p>
-                    <div class="finding">
-                        <strong>Attack:</strong> Flash loan on one chain → exploit stale price on another.
+                    <p>Cross-chain oracle bridge vulnerability. Price inconsistencies between source and destination chains.</p>
+                    <div class="detail">
+                        <strong>Attack:</strong> Flash loan on source chain → exploit stale bridged price on destination.
                     </div>
                 </div>
 
                 <div class="portfolio-card">
-                    <div class="severity severity-high">🟠 HIGH</div>
+                    <div class="badge badge-high">🟠 HIGH</div>
                     <h3>Wildcat Protocol</h3>
                     <div class="meta">Lending · Ethereum</div>
-                    <p>Permissionless market creation lacks rate validation — can be used to deploy predatory lending terms.</p>
-                    <div class="finding">
-                        <strong>Risk:</strong> Unchecked configuration parameters in market factory.
+                    <p>Permissionless market factory lacks rate validation. Predatory lending terms deployable by anyone.</p>
+                    <div class="detail">
+                        <strong>Risk:</strong> Unchecked constructor parameters enable malicious market creation.
                     </div>
                 </div>
 
@@ -424,36 +516,32 @@
     <!-- ─── Process ─── -->
     <section id="process">
         <div class="container">
-            <div class="section-label">PROCESS</div>
+            <div class="section-label">✦ METHODOLOGY</div>
             <h2 class="section-title">How we work</h2>
             <p class="section-sub">
-                From code drop to signed report — our engagement lifecycle is
-                transparent, efficient, and designed for maximum coverage.
+                From code drop to signed report — our engagement lifecycle maximizes
+                coverage while respecting your timeline.
             </p>
-            <div class="process-timeline">
-                <div class="process-step">
-                    <div class="dot"></div>
-                    <div class="step-num">STEP 01</div>
-                    <h3>Scoping & Intelligence</h3>
-                    <p>We review your protocol architecture, identify critical paths, and define the audit scope. Target surface areas mapped before a single line of code is read.</p>
+            <div class="process-grid">
+                <div class="process-card">
+                    <div class="step">01</div>
+                    <h3>Scoping & Recon</h3>
+                    <p>Architecture review, critical path mapping, attack surface enumeration. We know where to look before reading a line of code.</p>
                 </div>
-                <div class="process-step">
-                    <div class="dot"></div>
-                    <div class="step-num">STEP 02</div>
-                    <h3>Automated & Manual Analysis</h3>
-                    <p>Foundry-based fuzz testing runs alongside manual code review. Every state-transition function is stress-tested with adversarial inputs.</p>
+                <div class="process-card">
+                    <div class="step">02</div>
+                    <h3>Analysis</h3>
+                    <p>Automated (Foundry fuzz, Slither) + manual review interleaved. Every state function stress-tested with adversarial inputs.</p>
                 </div>
-                <div class="process-step">
-                    <div class="dot"></div>
-                    <div class="step-num">STEP 03</div>
-                    <h3>Exploit Validation</h3>
-                    <p>Every theoretical vulnerability is converted into a working PoC on a mainnet fork. We measure exact economic impact — no hypotheticals.</p>
+                <div class="process-card">
+                    <div class="step">03</div>
+                    <p>Each theoretical vulnerability becomes a working PoC on a mainnet fork. We quantify exact dollar impact.</p>
+                    <h3 style="margin-top: 0;">Exploit Validation</h3>
                 </div>
-                <div class="process-step">
-                    <div class="dot"></div>
-                    <div class="step-num">STEP 04</div>
-                    <h3>Report & Remediation</h3>
-                    <p>Detailed report with severity ratings, exploit code, and fix recommendations. We support your team through patch validation and re-audit.</p>
+                <div class="process-card">
+                    <div class="step">04</div>
+                    <h3>Report & Fix</h3>
+                    <p>Severity-rated findings with exploit code and remediation. We support your team through patch validation and re-audit.</p>
                 </div>
             </div>
         </div>
@@ -462,51 +550,52 @@
     <!-- ─── Contact ─── -->
     <section id="contact">
         <div class="container">
-            <div class="section-label">CONTACT</div>
+            <div class="section-label">✦ CONTACT</div>
             <h2 class="section-title">Let's talk</h2>
             <p class="section-sub">
-                We're available for direct engagement through Telegram, email, or
-                this form. Initial consultations are complimentary.
+                Direct engagement via Telegram or email. Initial consultations are
+                complimentary — we'll identify your most critical exposure before
+                any commitment.
             </p>
             <div class="contact-grid">
                 <div class="contact-left">
-                    <h3>Reach us directly</h3>
-                    <p>Quickest response is via Telegram. Email for formal engagement requests.</p>
-                    <div class="contact-methods">
-                        <a href="https://t.me/RedNetAuBot" target="_blank" class="contact-method">
-                            <span>📱</span> Telegram: @RedNetAuBot
+                    <h3>Reach us</h3>
+                    <p>Telegram gets the fastest response. Email for formal engagement requests.</p>
+                    <div class="contact-list">
+                        <a href="https://t.me/RedNetAuBot" target="_blank" class="contact-item">
+                            <span>📱</span> @RedNetAuBot
                             <span class="tag">QUICKEST</span>
                         </a>
-                        <a href="mailto:queenbvibes17@gmail.com" class="contact-method">
+                        <a href="mailto:queenbvibes17@gmail.com" class="contact-item">
                             <span>📧</span> queenbvibes17@gmail.com
                             <span class="tag">FORMAL</span>
                         </a>
+                        <span class="contact-item" style="cursor:default">
+                            <span>🔗</span> redghost47.github.io/red-ghost-security
+                            <span class="tag">LIVE</span>
+                        </span>
                     </div>
                 </div>
-                <div class="contact-right">
-                    <h3>Request an engagement</h3>
+                <div class="contact-form">
+                    <h3>Request an audit</h3>
                     <form action="mailto:queenbvibes17@gmail.com" method="post" enctype="text/plain">
-                        <div class="form-group">
-                            <label>PROJECT / PROTOCOL</label>
+                        <div class="fg">
+                            <label>PROTOCOL NAME</label>
                             <input type="text" name="project" placeholder="e.g. MyProtocol" required />
                         </div>
-                        <div class="form-group">
+                        <div class="fg">
                             <label>CHAIN</label>
                             <select name="chain">
                                 <option value="">— Select —</option>
-                                <option>Ethereum</option>
-                                <option>Arbitrum</option>
-                                <option>Optimism</option>
-                                <option>Base</option>
-                                <option>BNB Chain</option>
-                                <option>Polygon</option>
-                                <option>Solana</option>
-                                <option>Sui</option>
-                                <option>Other</option>
+                                <option>Ethereum</option><option>Arbitrum</option>
+                                <option>Optimism</option><option>Base</option>
+                                <option>BNB Chain</option><option>Polygon</option>
+                                <option>Avalanche</option><option>Solana</option>
+                                <option>Sui</option><option>Other</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label>SCOPE</label>
+                        <div class="fg">
+                            <label>SERVICE</label>
                             <select name="service">
                                 <option value="">— Select —</option>
                                 <option>Full Smart Contract Audit</option>
@@ -517,15 +606,15 @@
                                 <option>Not sure — discuss</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label>CONTACT (TELEGRAM OR EMAIL)</label>
-                            <input type="text" name="contact" placeholder="@yourTelegram or email" required />
+                        <div class="fg">
+                            <label>YOUR CONTACT (TELEGRAM / EMAIL)</label>
+                            <input type="text" name="contact" placeholder="@yourTelegram or you@email.com" required />
                         </div>
-                        <div class="form-group">
+                        <div class="fg">
                             <label>NOTES</label>
-                            <textarea name="notes" placeholder="TVL, contract links, timeline, anything relevant…"></textarea>
+                            <textarea name="notes" placeholder="TVL estimate, contract links, timeline, anything relevant…"></textarea>
                         </div>
-                        <button type="submit" class="btn-primary" style="width:100%">SEND INQUIRY</button>
+                        <button type="submit" class="btn-primary" style="width:100%">SEND INQUIRY →</button>
                     </form>
                 </div>
             </div>
@@ -535,9 +624,34 @@
     <!-- ─── Footer ─── -->
     <footer>
         <div class="container">
-            <span class="ghost">👻</span> Red Ghost Security — DeFi Audit &amp; Exploit Research — 2026
+            <span class="ghost-icon">👻</span> Red Ghost Security — DeFi Audit &amp; Exploit Research — 2026
         </div>
     </footer>
+
+    <script>
+        // ── Number counter animation ──
+        function animateCounter(el, target) {
+            let current = 0;
+            const step = Math.ceil(target / 40);
+            const interval = setInterval(() => {
+                current += step;
+                if (current >= target) { current = target; clearInterval(interval); }
+                el.textContent = current + (target > 100 ? '%' : target > 5 ? '+' : '');
+            }, 40);
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                animateCounter(document.getElementById('stat1'), 1057);
+                animateCounter(document.getElementById('stat2'), 4);
+                animateCounter(document.getElementById('stat3'), 3);
+            }, 500);
+        });
+
+        // ── Navbar scroll effect ──
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
+        });
+    </script>
 
 </body>
 </html>
